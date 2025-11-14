@@ -1,0 +1,58 @@
+version: 2
+updates:
+  # Enable version updates for npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "tourze"
+    assignees:
+      - "tourze"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "automated"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    auto-merge: true
+    # Only auto-merge patch and minor updates
+    allowed-updates:
+      - match:
+          update-type: "version-update:semver-patch"
+      - match:
+          update-type: "version-update:semver-minor"
+    ignore:
+      # Ignore major version updates for production dependencies
+      - dependency-name: "@tarojs/taro"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "swr"
+        update-types: ["version-update:semver-major"]
+    # Increase rebase retries to avoid conflicts
+    rebase-strategy: "auto"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    reviewers:
+      - "tourze"
+    assignees:
+      - "tourze"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    auto-merge: true
