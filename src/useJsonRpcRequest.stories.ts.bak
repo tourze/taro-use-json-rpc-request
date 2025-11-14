@@ -1,0 +1,334 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import React, { useEffect } from 'react';
+import { useJsonRpcRequest, JsonRPC } from './index';
+import { setupStorybookTaro, resetStorybookTaro } from './mocks';
+
+// 初始化Taro mock
+setupStorybookTaro();
+
+const meta: Meta<typeof useJsonRpcRequest> = {
+  title: 'Hooks/useJsonRpcRequest',
+  component: () => null, // Hook stories不使用组件
+  tags: ['autodocs'],
+  parameters: {
+    layout: 'centered',
+    docs: {
+      description: {
+        component: `
+useJsonRpcRequest 是一个基于SWR的React Hook，用于在Taro应用中进行JSON-RPC 2.0协议的请求。
+
+主要特性：
+- 🚀 基于SWR进行数据缓存和重新验证
+- 🔐 支持JWT认证和签名验证
+- 📱 专为Taro框架优化
+- 🎯 完全TypeScript支持
+- 🔄 自动错误处理和重试
+        `
+      }
+    }
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// 基础使用示例
+export const BasicUsage: Story = {
+  render: () => {
+    const Component = () => {
+      resetStorybookTaro();
+
+      const { data, error, isLoading } = useJsonRpcRequest(
+        'user.getProfile',
+        { userId: '123' }
+      );
+
+      return (
+        <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h3>基础使用示例</h3>
+          <p>方法: <code>user.getProfile</code></p>
+          <p>参数: <code>{`{ userId: '123' }`}</code></p>
+
+          <div style={{ marginTop: '16px' }}>
+            {isLoading && <p>⏳ 加载中...</p>}
+            {error && <p style={{ color: 'red' }}>❌ 错误: {error.message}</p>}
+            {data && (
+              <div style={{ background: '#f5f5f5', padding: '12px', borderRadius: '4px' }}>
+                <h4>响应数据:</h4>
+                <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+                  {JSON.stringify(data, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    return <Component />;
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: '最基本的用法，获取用户资料信息。'
+      }
+    }
+  }
+};
+
+// 带选项的使用示例
+export const WithOptions: Story = {
+  render: () => {
+    const Component = () => {
+      const [logs, setLogs] = React.useState<string[]>([]);
+
+      const addLog = (message: string) => {
+        setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+      };
+
+      const { data, error, isLoading, mutate } = useJsonRpcRequest(
+        'user.getFriends',
+        { userId: '123' },
+        {
+          swrOptions: {
+            revalidateOnFocus: true,
+            refreshInterval: 10000, // 10秒刷新一次（仅在Storybook中用于演示）
+          },
+          onSuccess: (data) => {
+            addLog(`✅ 成功获取 ${data?.length || 0} 个好友`);
+          },
+          onError: (error) => {
+            addLog(`❌ 请求失败: ${error.message}`);
+          },
+        }
+      );
+
+      const handleRefresh = () => {
+        addLog('🔄 手动刷新数据');
+        mutate();
+      };
+
+      return (
+        <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h3>带选项的使用示例</h3>
+          <p>方法: <code>user.getFriends</code></p>
+          <p>配置: 自动刷新、成功/错误回调</p>
+
+          <div style={{ marginTop: '16px' }}>
+            <button
+              onClick={handleRefresh}
+              style={{
+                padding: '8px 16px',
+                background: '#0070f3',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                marginBottom: '16px'
+              }}
+            >
+              🔄 手动刷新
+            </button>
+
+            {isLoading && <p>⏳ 加载中...</p>}
+            {error && <p style={{ color: 'red' }}>❌ 错误: {error.message}</p>}
+            {data && (
+              <div style={{ background: '#f5f5f5', padding: '12px', borderRadius: '4px' }}>
+                <h4>好友列表 ({data.length} 个):</h4>
+                <ul>
+                  {data.map((friend: any) => (
+                    <li key={friend.id}>
+                      <strong>{friend.name}</strong> ({friend.email})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div style={{ marginTop: '16px', background: '#e8f4fd', padding: '12px', borderRadius: '4px' }}>
+              <h4>操作日志:</h4>
+              <div style={{ fontSize: '12px', maxHeight: '150px', overflow: 'auto' }}>
+                {logs.map((log, index) => (
+                  <div key={index}>{log}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    return <Component />;
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: '展示如何使用选项参数，包括SWR配置和生命周期回调。'
+      }
+    }
+  }
+};
+
+// 错误处理示例
+export const ErrorHandling: Story = {
+  render: () => {
+    const Component = () => {
+      resetStorybookTaro();
+
+      const { data, error, isLoading, isError } = useJsonRpcRequest(
+        'nonexistent.method', // 不存在的方法
+        { test: 'data' }
+      );
+
+      return (
+        <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h3>错误处理示例</h3>
+          <p>方法: <code>nonexistent.method</code> (故意调用不存在的方法)</p>
+
+          <div style={{ marginTop: '16px' }}>
+            {isLoading && <p>⏳ 加载中...</p>}
+            {isError && error && (
+              <div style={{
+                background: '#ffebee',
+                color: '#c62828',
+                padding: '16px',
+                borderRadius: '4px',
+                border: '1px solid #ef9a9a'
+              }}>
+                <h4>❌ 请求错误</h4>
+                <p><strong>错误代码:</strong> {error.code}</p>
+                <p><strong>错误消息:</strong> {error.message}</p>
+                {error.data && (
+                  <details>
+                    <summary>详细错误信息</summary>
+                    <pre style={{ fontSize: '12px', marginTop: '8px' }}>
+                      {JSON.stringify(error.data, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            )}
+            {data && (
+              <div style={{ color: 'green' }}>
+                <p>✅ 意外成功: {JSON.stringify(data)}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    return <Component />;
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: '展示错误处理机制，当API调用失败时如何捕获和处理错误。'
+      }
+    }
+  }
+};
+
+// 直接API调用示例
+export const DirectApiCall: Story = {
+  render: () => {
+    const Component = () => {
+      const [result, setResult] = React.useState<any>(null);
+      const [loading, setLoading] = React.useState(false);
+      const [error, setError] = React.useState<string>('');
+
+      const handleDirectCall = async () => {
+        resetStorybookTaro();
+        setLoading(true);
+        setError('');
+        setResult(null);
+
+        try {
+          // 首先初始化JsonRPC
+          JsonRPC.init({
+            baseURL: 'https://mock-api.example.com',
+            appId: 'storybook-app',
+            appSecret: 'storybook-secret',
+            useAuthorization: true
+          });
+
+          const response = await JsonRPC.request(
+            'system.getStats',
+            {},
+            {
+              withJwt: true,
+              headers: {
+                'Custom-Header': 'storybook-test'
+              }
+            }
+          );
+
+          setResult(response);
+        } catch (err: any) {
+          setError(err.message || '未知错误');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+          <h3>直接API调用示例</h3>
+          <p>使用 JsonRPC.request 方法进行直接调用</p>
+
+          <div style={{ marginTop: '16px' }}>
+            <button
+              onClick={handleDirectCall}
+              disabled={loading}
+              style={{
+                padding: '8px 16px',
+                background: loading ? '#ccc' : '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {loading ? '⏳ 请求中...' : '🚀 发送请求'}
+            </button>
+
+            {error && (
+              <div style={{
+                background: '#ffebee',
+                color: '#c62828',
+                padding: '12px',
+                borderRadius: '4px',
+                marginTop: '16px'
+              }}>
+                <strong>❌ 错误:</strong> {error}
+              </div>
+            )}
+
+            {result && (
+              <div style={{
+                background: '#e8f5e8',
+                padding: '12px',
+                borderRadius: '4px',
+                marginTop: '16px'
+              }}>
+                <h4>✅ 请求结果:</h4>
+                <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+                  {JSON.stringify(result, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    return <Component />;
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: '展示如何直接使用JsonRPC类进行API调用，适合在非组件环境中使用。'
+      }
+    }
+  }
+};

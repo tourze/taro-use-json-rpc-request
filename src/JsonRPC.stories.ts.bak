@@ -1,0 +1,408 @@
+import type { Meta, StoryObj } from '@storybook/react';
+import React, { useState } from 'react';
+import { JsonRPC } from './index';
+import { resetStorybookTaro } from './mocks';
+
+const meta: Meta<typeof JsonRPC> = {
+  title: 'API/JsonRPC',
+  component: JsonRPC,
+  tags: ['autodocs'],
+  parameters: {
+    layout: 'centered',
+    docs: {
+      description: {
+        component: `
+JsonRPC 类提供了完整的JSON-RPC 2.0协议实现，支持：
+
+- 🔐 JWT认证和HMAC-SHA1签名
+- 📱 Taro环境集成
+- 🎯 TypeScript完全支持
+- 🔄 错误处理和重试机制
+- 📦 Base64编码支持
+        `
+      }
+    }
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// 初始化配置示例
+export const Configuration: Story = {
+  render: () => {
+    const [config, setConfig] = useState({
+      baseURL: 'https://api.example.com',
+      appId: 'demo-app',
+      appSecret: 'demo-secret',
+      useAuthorization: true,
+      timeout: 10000
+    });
+
+    const [message, setMessage] = useState('');
+
+    const handleInit = () => {
+      try {
+        JsonRPC.init(config);
+        setMessage('✅ JsonRPC 初始化成功！');
+      } catch (error: any) {
+        setMessage(`❌ 初始化失败: ${error.message}`);
+      }
+    };
+
+    return (
+      <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px', maxWidth: '600px' }}>
+        <h3>JsonRPC 配置示例</h3>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+            Base URL:
+          </label>
+          <input
+            type="text"
+            value={config.baseURL}
+            onChange={(e) => setConfig({ ...config, baseURL: e.target.value })}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+            App ID:
+          </label>
+          <input
+            type="text"
+            value={config.appId}
+            onChange={(e) => setConfig({ ...config, appId: e.target.value })}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+            App Secret:
+          </label>
+          <input
+            type="password"
+            value={config.appSecret}
+            onChange={(e) => setConfig({ ...config, appSecret: e.target.value })}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              checked={config.useAuthorization}
+              onChange={(e) => setConfig({ ...config, useAuthorization: e.target.checked })}
+            />
+            使用Bearer Token授权
+          </label>
+        </div>
+
+        <button
+          onClick={handleInit}
+          style={{
+            padding: '10px 20px',
+            background: '#0070f3',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          🚀 初始化 JsonRPC
+        </button>
+
+        {message && (
+          <div style={{
+            marginTop: '16px',
+            padding: '12px',
+            borderRadius: '4px',
+            background: message.includes('✅') ? '#e8f5e8' : '#ffebee',
+            color: message.includes('✅') ? '#2e7d32' : '#c62828'
+          }}>
+            {message}
+          </div>
+        )}
+
+        <div style={{ marginTop: '20px', background: '#f5f5f5', padding: '12px', borderRadius: '4px' }}>
+          <h4>当前配置:</h4>
+          <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+            {JSON.stringify(config, null, 2)}
+          </pre>
+        </div>
+      </div>
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: '展示如何初始化和配置JsonRPC客户端。'
+      }
+    }
+  }
+};
+
+// API请求测试工具
+export const ApiTester: Story = {
+  render: () => {
+    const [method, setMethod] = useState('user.getProfile');
+    const [params, setParams] = useState('{"userId": "123"}');
+    const [withJwt, setWithJwt] = useState(true);
+    const [customHeaders, setCustomHeaders] = useState('{"Custom-Header": "test-value"}');
+    const [result, setResult] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleRequest = async () => {
+      setLoading(true);
+      setError('');
+      setResult(null);
+
+      try {
+        resetStorybookTaro();
+
+        // 初始化JsonRPC
+        JsonRPC.init({
+          baseURL: 'https://mock-api.example.com',
+          appId: 'storybook-test',
+          appSecret: 'storybook-secret',
+          useAuthorization: true
+        });
+
+        let parsedParams;
+        let parsedHeaders;
+
+        try {
+          parsedParams = JSON.parse(params);
+        } catch (e) {
+          parsedParams = {};
+        }
+
+        try {
+          parsedHeaders = JSON.parse(customHeaders);
+        } catch (e) {
+          parsedHeaders = {};
+        }
+
+        const response = await JsonRPC.request(method, parsedParams, {
+          withJwt,
+          headers: parsedHeaders
+        });
+
+        setResult(response);
+      } catch (err: any) {
+        setError(err.message || '请求失败');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px', maxWidth: '800px' }}>
+        <h3>API 请求测试工具</h3>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+            方法名:
+          </label>
+          <select
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}
+          >
+            <option value="user.getProfile">user.getProfile</option>
+            <option value="user.getFriends">user.getFriends</option>
+            <option value="user.updateProfile">user.updateProfile</option>
+            <option value="system.getStats">system.getStats</option>
+            <option value="nonexistent.method">nonexistent.method (测试错误)</option>
+          </select>
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+            参数 (JSON格式):
+          </label>
+          <textarea
+            value={params}
+            onChange={(e) => setParams(e.target.value)}
+            rows={3}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'monospace' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input
+              type="checkbox"
+              checked={withJwt}
+              onChange={(e) => setWithJwt(e.target.checked)}
+            />
+            包含JWT Token
+          </label>
+        </div>
+
+        <div style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>
+            自定义请求头 (JSON格式):
+          </label>
+          <textarea
+            value={customHeaders}
+            onChange={(e) => setCustomHeaders(e.target.value)}
+            rows={2}
+            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontFamily: 'monospace' }}
+          />
+        </div>
+
+        <button
+          onClick={handleRequest}
+          disabled={loading}
+          style={{
+            padding: '10px 20px',
+            background: loading ? '#ccc' : '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            marginBottom: '16px'
+          }}
+        >
+          {loading ? '⏳ 请求中...' : '🚀 发送请求'}
+        </button>
+
+        {error && (
+          <div style={{
+            background: '#ffebee',
+            color: '#c62828',
+            padding: '12px',
+            borderRadius: '4px',
+            marginBottom: '16px'
+          }}>
+            <strong>❌ 错误:</strong> {error}
+          </div>
+        )}
+
+        {result && (
+          <div style={{
+            background: '#e8f5e8',
+            padding: '12px',
+            borderRadius: '4px',
+            marginBottom: '16px'
+          }}>
+            <h4>✅ 请求结果:</h4>
+            <pre style={{ fontSize: '12px', overflow: 'auto', maxHeight: '300px' }}>
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: '一个交互式的API测试工具，可以测试各种方法和参数组合。'
+      }
+    }
+  }
+};
+
+// 签名验证示例
+export const SignatureDemo: Story = {
+  render: () => {
+    const [showSignature, setShowSignature] = useState(false);
+    const [signatureInfo, setSignatureInfo] = useState<any>(null);
+
+    const demonstrateSignature = async () => {
+      try {
+        resetStorybookTaro();
+
+        // 使用密钥初始化
+        JsonRPC.init({
+          baseURL: 'https://mock-api.example.com',
+          appId: 'demo-app',
+          appSecret: 'demo-secret-key',
+          signKey: 'extra-signature-key',
+          useAuthorization: true
+        });
+
+        // 模拟签名信息
+        setSignatureInfo({
+          appId: 'demo-app',
+          appSecret: 'demo-secret-key',
+          signKey: 'extra-signature-key',
+          signatureAlgorithm: 'HMAC-SHA1',
+          additionalMd5Signature: true,
+          headers: {
+            'Signature-AppID': 'demo-app',
+            'Signature-Nonce': 'generated-random-nonce',
+            'Signature-Timestamp': 'current-timestamp',
+            'Signature': 'HMAC-SHA1-hash',
+            'Json-RPC-Sign': 'md5-hash'
+          }
+        });
+        setShowSignature(true);
+      } catch (error: any) {
+        console.error('签名演示失败:', error);
+      }
+    };
+
+    return (
+      <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '8px', maxWidth: '600px' }}>
+        <h3>签名验证机制演示</h3>
+        <p>
+          展示JsonRPC的签名验证功能，包括HMAC-SHA1签名和MD5签名。
+        </p>
+
+        <button
+          onClick={demonstrateSignature}
+          style={{
+            padding: '10px 20px',
+            background: '#6f42c1',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginBottom: '16px'
+          }}
+        >
+          🔐 演示签名机制
+        </button>
+
+        {showSignature && signatureInfo && (
+          <div style={{
+            background: '#f3e5f5',
+            padding: '16px',
+            borderRadius: '4px',
+            border: '1px solid #ce93d8'
+          }}>
+            <h4>🔐 签名配置信息:</h4>
+            <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+              {JSON.stringify(signatureInfo, null, 2)}
+            </pre>
+
+            <div style={{ marginTop: '16px', fontSize: '14px' }}>
+              <h5>签名流程说明:</h5>
+              <ol>
+                <li>生成时间戳和随机nonce</li>
+                <li>构造签名字符串: payload + timestamp + nonce</li>
+                <li>使用HMAC-SHA1计算签名</li>
+                <li>添加所有签名相关请求头</li>
+                <li>可选：额外添加MD5签名验证</li>
+              </ol>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: '展示JsonRPC的签名验证机制，包括HMAC-SHA1和MD5签名。'
+      }
+    }
+  }
+};

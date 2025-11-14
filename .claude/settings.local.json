@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(npx storybook@latest init)",
+      "Bash(npm run storybook:*)",
+      "Bash(npx storybook dev:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(taskkill:*)",
+      "Bash(nul:*)",
+      "Bash(powershell:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:*)",
+      "Bash(npx eslint:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
