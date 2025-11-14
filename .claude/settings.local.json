@@ -21,7 +21,8 @@
       "Bash(gh auth status:*)",
       "Bash(tree:*)",
       "Bash(npm ci:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(npm run lint:fix:*)"
     ],
     "deny": [],
     "ask": []

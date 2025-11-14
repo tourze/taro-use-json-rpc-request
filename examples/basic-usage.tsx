@@ -17,7 +17,7 @@ interface UserProfile {
   avatar?: string;
 }
 
-const UserProfileExample: React.FC = () => {
+export const UserProfileExample: React.FC = () => {
   // 基本使用
   const { data, error, isLoading } = useJsonRpcRequest<UserProfile>(
     'user.getProfile',
@@ -35,9 +35,9 @@ const UserProfileExample: React.FC = () => {
   );
 };
 
-const AdvancedExample: React.FC = () => {
+export const AdvancedExample: React.FC = () => {
   // 带选项的使用
-  const { data, error, mutate } = useJsonRpcRequest<UserProfile[]>(
+  const { data, mutate } = useJsonRpcRequest<UserProfile[]>(
     'user.getFriends',
     { userId: '123' },
     {
@@ -48,8 +48,8 @@ const AdvancedExample: React.FC = () => {
       onSuccess: (data) => {
         console.log('获取好友列表成功:', data);
       },
-      onError: (error) => {
-        console.error('获取好友列表失败:', error);
+      onError: (_error) => {
+        console.error('获取好友列表失败');
       },
     }
   );
@@ -72,7 +72,7 @@ const AdvancedExample: React.FC = () => {
 };
 
 // 直接使用 JsonRPC 类
-const DirectApiExample: React.FC = () => {
+export const DirectApiExample: React.FC = () => {
   const updateUser = async () => {
     try {
       const result = await JsonRPC.request<UserProfile>(

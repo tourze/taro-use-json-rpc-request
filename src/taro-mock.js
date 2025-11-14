@@ -18,7 +18,7 @@ const mockTaro = {
     return null;
   },
 
-  setStorageSync: (key, data) => {
+  setStorageSync: (key, _data) => {
     console.log('Mock Taro.setStorageSync called with key:', key);
   },
 

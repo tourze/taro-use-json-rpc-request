@@ -1,6 +1,7 @@
 {
   "name": "taro-use-json-rpc-request",
   "version": "1.0.0",
+  "type": "module",
   "description": "A JSON-RPC 2.0 request hook for Taro applications with SWR integration",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",

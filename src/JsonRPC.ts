@@ -9,8 +9,7 @@ import type {
   JsonRPCConfig,
   RequestOptions,
   JsonRPCResponse,
-  JsonRPCError,
-  JsonRPCRequest
+  JsonRPCError
 } from './types';
 
 const VERSION = '2.0';
@@ -68,7 +67,9 @@ export class JsonRPC {
           headers[this.config.useAuthorization ? 'Authorization' : 'JWT'] = 
             this.config.useAuthorization ? `Bearer ${jwt}` : jwt;
         }
-      } catch (e) {}
+      } catch {
+      // Ignore parsing errors for localStorage data
+    }
     }
 
     // 签名
@@ -103,7 +104,7 @@ export class JsonRPC {
         dataType: 'json',
       });
 
-      let result: JsonRPCResponse<T> = res.data;
+      const result: JsonRPCResponse<T> = res.data;
 
       if (this.config.useBase64 && typeof result.result === 'string') {
         result.result = JSON.parse(Base64.decode(result.result));
@@ -144,11 +145,15 @@ export class JsonRPC {
     try {
       const mid = Taro.getStorageSync('KEY_SHARE_MID');
       if (mid) params.__mid = mid;
-    } catch (e) {}
+    } catch {
+      // Ignore parsing errors for localStorage data
+    }
     try {
       const ts = Taro.getStorageSync('TRAFFIC_SOURCE');
       if (ts) params.__ts = ts;
-    } catch (e) {}
+    } catch {
+      // Ignore parsing errors for localStorage data
+    }
 
     const base = this.config.baseURL.replace(/\/+$/, '');
     const endpoint = `${base}/api/json-rpc?i=1`;
