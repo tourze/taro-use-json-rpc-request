@@ -69,6 +69,8 @@
     "@storybook/addon-interactions": "^7.6.17",
     "@storybook/react": "^7.6.17",
     "@storybook/react-vite": "^7.6.17",
+    "@tarojs/react": "^4.1.8",
+    "@tarojs/taro": "^4.1.8",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.6.1",

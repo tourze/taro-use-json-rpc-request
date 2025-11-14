@@ -1,4 +1,12 @@
 // 用于构建时的类型声明文件
+import { TaroGeneral } from '@tarojs/taro';
+
+declare global {
+  interface Window {
+    Taro?: TaroGeneral;
+  }
+}
+
 declare module '@tarojs/taro' {
   export const getCurrentPages: () => any[];
   export const request: (options: any) => Promise<any>;
@@ -6,3 +14,5 @@ declare module '@tarojs/taro' {
   export const setStorageSync: (key: string, value: any) => void;
   export const removeStorageSync: (key: string) => void;
 }
+
+export {};
